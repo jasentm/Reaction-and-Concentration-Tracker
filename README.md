@@ -13,5 +13,10 @@ Be your DMs new favorite player by keeping track of them yourself!
 
 ## How To Use
 
-1. Install a userscript extension of your choice. I've tested [Tampermonkey](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo) in Google Chrome.
+1. Install a userscript extension of your choice. I personally use [Tampermonkey](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo) in Google Chrome.
 2. Install the userscript from [DnDBeyondReactionConcentration.js](https://raw.githubusercontent.com/jasentm/Reaction-and-Concentration-Tracker/main/DnDBeyondReactionConcentration.js)
+3. Navigate to your character page and it should work!
+
+## Notes/Acknowledgements
+* If you use this and want additional features or find that something doesn't work, please let me know!
+* This entire idea was inspired by mwr247's [DnDBeyondSpellPoints](https://github.com/Mwr247/DnDBeyondSpellPointsV2/tree/main) - I would have never even known that userscripts were a thing without it! 
