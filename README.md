@@ -6,7 +6,12 @@ Be your DMs new favorite player by keeping track of them yourself!
 
 ## Features
 * 2 simple check boxes added to your dndbeyond character sheet for concentration and reaction
-* An built in alert asking for a concentration check when you take damage and are maintaining concentration
+* A built-in alert asking for a concentration check when you take damage and are maintaining concentration
   * The tracker will even calculate the DC for you!
 * Checked boxes will persist even if the page is reloaded or navigated away from
-* Boxes will also remain checked (or unchecked) per character 
+* Boxes will also remain checked (or unchecked) per character
+
+## How To Use
+
+1. Install a userscript extension of your choice. I've tested [Tampermonkey](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo) in Google Chrome.
+2. Install the userscript from [DnDBeyondReactionConcentration.js](https://raw.githubusercontent.com/jasentm/Reaction-and-Concentration-Tracker/main/DnDBeyondReactionConcentration.js)
