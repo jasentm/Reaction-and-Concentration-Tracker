@@ -17,6 +17,7 @@ Be your DMs new favorite player by keeping track of them yourself!
 2. Install the userscript from [DnDBeyondReactionConcentration.js](https://raw.githubusercontent.com/jasentm/Reaction-and-Concentration-Tracker/main/DnDBeyondReactionConcentration.js)
 3. Navigate to your character page and it should work!
 
-## Notes/Acknowledgements
+## Notes/Acknowledgements/Known Issues
 * If you use this and want additional features or find that something doesn't work, please let me know!
-* This entire idea was inspired by mwr247's [DnDBeyondSpellPoints](https://github.com/Mwr247/DnDBeyondSpellPointsV2/tree/main) - I would have never even known that userscripts were a thing without it! 
+* This entire idea was inspired by mwr247's [DnDBeyondSpellPoints](https://github.com/Mwr247/DnDBeyondSpellPointsV2/tree/main) - I would have never even known that userscripts were a thing without it!
+* I have, on more than one occasion while building this userscript, encountered a page on DnDBeyond asking for me to click and hold on a button to prove I am human - this may or may not happen to you while using this tracker
