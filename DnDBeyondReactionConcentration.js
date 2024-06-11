@@ -18,8 +18,8 @@
         const popup = document.createElement('div');
         popup.id = 'cr-popup';
         popup.style.postion = 'fixed';
-        popup.style.top = '10px';
-        popup.style.right = '10px';
+        popup.style.bottom = '10px';  
+        popup.style.left = '10px';    
         popup.style.width = '200px';
         popup.style.padding = '10px';
         popup.style.backgroundColor = '#fff';
