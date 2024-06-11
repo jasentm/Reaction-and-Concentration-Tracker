@@ -142,7 +142,7 @@
               const damage = parseInt(damageInput.value, 10);
               if (!isNaN(damage) && damage > 0) {
                 const dc = Math.max(10, Math.floor(damage / 2));
-                showAlert(`Make a Concentration check! The DC is ${dc}.`);
+                showAlert(`Make a Concentration check (Constitution Saving Throw)! The DC is ${dc}.`);
               } else {
                 showAlert('Invalid damage value.');
               }
