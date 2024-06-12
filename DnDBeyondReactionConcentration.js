@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         DnDBeyond Concentration and Reaction Tracker
 // @description  Adds a popup with checkboxes to track Concentration and Reaction on DnDBeyond character sheets.
-// @version      1.4
+// @version      1.0
 // @author       YourName
 // @match        https://www.dndbeyond.com/*characters/*
 // @match        https://www.dndbeyond.com/characters
@@ -35,12 +35,12 @@
       const popup = document.createElement('div');
       popup.id = 'cr-popup';
       popup.style.position = 'fixed';
-      popup.style.bottom = '10px';  // Position from the bottom of the screen
-      popup.style.right = '10px';   // Position from the right side of the screen
+      popup.style.bottom = '10px'; // Position from the bottom of the screen
+      popup.style.right = '10px'; // Position from the right side of the screen
       popup.style.width = '200px';
       popup.style.padding = '10px';
       popup.style.backgroundColor = '#fff';
-      popup.style.border = '1px solid #000';
+      popup.style.border = '2px solid #000';
       popup.style.zIndex = 1000;
       popup.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.1)';
 
@@ -74,7 +74,23 @@
         const checkboxes = { ...savedCheckboxes, concentration: concentrationCheckbox.checked };
         localStorage.setItem(storageKey, JSON.stringify(checkboxes));
       });
-    };
+
+      applyBorderColor();
+  };
+
+  // Function to apply the border color from the polygon element
+  const applyBorderColor = () => {
+      const svgPath = document.querySelector('.ddbc-initiative-box-svg path');
+      if (svgPath) {
+          const borderColor = svgPath.getAttribute('fill');
+          const popup = document.getElementById('cr-popup');
+          const button = document.getElementById('cr-toggle-button');
+          if (popup) {
+              popup.style.borderColor = borderColor
+              button.style.borderColor = borderColor;
+          }
+      }
+  };
 
   const togglePopupVisibility = () => {
       const popup = document.getElementById('cr-popup');
@@ -93,8 +109,9 @@
       button.textContent = 'Hide';
       button.id = 'cr-toggle-button';
       button.style.position = 'fixed';
-      button.style.bottom = '70px';  // Adjust the position as needed
-      button.style.right = '10px';  // Adjust the position as needed
+      button.style.border = '1px solid #000';
+      button.style.bottom = '70px'; // Adjust the position as needed
+      button.style.right = '10px'; // Adjust the position as needed
       button.addEventListener('click', togglePopupVisibility);
       document.body.appendChild(button);
   };
@@ -173,20 +190,31 @@
       }
     };
 
+  // Function to observe changes in the SVG element and update the border color
+    // Function to observe changes in the SVG element and update the border color
+  const observeSVGChanges = () => {
+      const svgElement = document.querySelector('.ddbc-initiative-box-svg');
+      if (svgElement) {
+          const observer = new MutationObserver(applyBorderColor);
+          observer.observe(svgElement, { attributes: true, childList: true, subtree: true });
+      }
+  };
+
   // Function to observe changes in the DOM and add event listeners when elements are available
   const observeDOM = () => {
-    const observer = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        if (mutation.type === 'childList') {
-          addDamageListener();
-        }
+      const observer = new MutationObserver((mutations) => {
+          mutations.forEach((mutation) => {
+              if (mutation.type === 'childList') {
+                  applyBorderColor(); // Update border color on DOM changes
+                  observeSVGChanges(); // Observe changes in the SVG element
+              }
+          });
       });
-    });
 
-    observer.observe(document.body, {
-      childList: true,
-      subtree: true,
-    });
+      observer.observe(document.body, {
+          childList: true,
+          subtree: true,
+      });
   };
 
   // Check if we are on a character sheet page and create the popup
@@ -195,6 +223,7 @@
       createPopup();
       createToggleButton();
       observeDOM();
+      observeSVGChanges();
     }
   };
 
