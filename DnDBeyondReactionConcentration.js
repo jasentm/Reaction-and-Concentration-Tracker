@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         DnDBeyond Concentration and Reaction Tracker
 // @description  Adds a popup with checkboxes to track Concentration and Reaction on DnDBeyond character sheets.
-// @version      1.0
+// @version      1.4
 // @author       YourName
 // @match        https://www.dndbeyond.com/*characters/*
 // @match        https://www.dndbeyond.com/characters
@@ -162,6 +162,8 @@
 
     // Append overlay to body
     document.body.appendChild(overlay);
+
+    console.log(message);
   };
 
   // Function to add event listener to the damage button
@@ -188,10 +190,9 @@
           }
         });
       }
-    };
+  };
 
   // Function to observe changes in the SVG element and update the border color
-    // Function to observe changes in the SVG element and update the border color
   const observeSVGChanges = () => {
       const svgElement = document.querySelector('.ddbc-initiative-box-svg');
       if (svgElement) {
@@ -207,6 +208,9 @@
               if (mutation.type === 'childList') {
                   applyBorderColor(); // Update border color on DOM changes
                   observeSVGChanges(); // Observe changes in the SVG element
+
+                  // Check for the damage button and input and add the event listener
+                  addDamageListener();
               }
           });
       });
@@ -224,6 +228,7 @@
       createToggleButton();
       observeDOM();
       observeSVGChanges();
+      addDamageListener(); // Attempt to add the listener on init
     }
   };
 
