@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         DnDBeyond Concentration and Reaction Tracker
 // @description  Adds a popup with checkboxes to track Concentration and Reaction on DnDBeyond character sheets.
-// @version      1.4
+// @version      1.0
 // @author       YourName
 // @match        https://www.dndbeyond.com/*characters/*
 // @match        https://www.dndbeyond.com/characters
