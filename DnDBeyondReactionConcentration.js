@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         DnDBeyond Concentration and Reaction Tracker
 // @description  Adds a popup with checkboxes to track Concentration and Reaction on DnDBeyond character sheets.
-// @version      1.0
+// @version      1.1
 // @author       jasentm
 // @match        https://www.dndbeyond.com/*characters/*
 // @match        https://www.dndbeyond.com/characters
@@ -12,226 +12,222 @@
 (() => {
   'use strict';
 
-  // Function to create and show the popup
+  // ---- utils ----
+  const qs = (sel, root=document) => root.querySelector(sel);
+  const qsa = (sel, root=document) => Array.from(root.querySelectorAll(sel));
+
+  // ---- popup + storage ----
   const createPopup = () => {
-      // Retrieve character ID from the URL
-      const characterId = location.pathname.split('/').pop();
+    const characterId = location.pathname.split('/').pop();
+    if (!characterId) {
+      console.error('Character ID not found in URL');
+      return;
+    }
 
-      // Check if character ID is available
-      if (!characterId) {
-        console.error('Character ID not found in URL');
-        return;
-      }
+    const storageKey = `dndbeyond_${characterId}_checkboxes`;
+    const saved = JSON.parse(localStorage.getItem(storageKey)) || {};
+    const savedReaction = !!saved.reaction;
+    const savedConcentration = !!saved.concentration;
 
-      // Create a unique storage key for this character
-      const storageKey = `dndbeyond_${characterId}_checkboxes`;
-
-      // Retrieve the state of checkboxes from local storage
-      const savedCheckboxes = JSON.parse(localStorage.getItem(storageKey)) || {};
-      const savedReaction = savedCheckboxes.reaction || false;
-      const savedConcentration = savedCheckboxes.concentration || false;
-
-      // Create the popup container
-      const popup = document.createElement('div');
-      popup.id = 'cr-popup';
-      popup.style.position = 'fixed';
-      popup.style.bottom = '10px'; // Position from the bottom of the screen
-      popup.style.right = '10px'; // Position from the right side of the screen
-      popup.style.width = '200px';
-      popup.style.padding = '10px';
-      popup.style.backgroundColor = '#fff';
-      popup.style.border = '2px solid #000';
-      popup.style.zIndex = 1000;
-      popup.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.1)';
-
-      // Create the content
-      popup.innerHTML = `
-        <div>
-          <label>
-            <input type="checkbox" id="reactionCheckbox" ${savedReaction ? 'checked' : ''}>
-            Reaction
-          </label>
-        </div>
-        <div>
-          <label>
-            <input type="checkbox" id="concentrationCheckbox" ${savedConcentration ? 'checked' : ''}>
-            Concentration
-          </label>
-        </div>
-      `;
-
-      // Append the popup to the body
-      document.body.appendChild(popup);
-
-      // Add event listeners to checkboxes to update local storage
-      const reactionCheckbox = document.getElementById('reactionCheckbox');
-      const concentrationCheckbox = document.getElementById('concentrationCheckbox');
-      reactionCheckbox.addEventListener('change', () => {
-        const checkboxes = { ...savedCheckboxes, reaction: reactionCheckbox.checked };
-        localStorage.setItem(storageKey, JSON.stringify(checkboxes));
-      });
-      concentrationCheckbox.addEventListener('change', () => {
-        const checkboxes = { ...savedCheckboxes, concentration: concentrationCheckbox.checked };
-        localStorage.setItem(storageKey, JSON.stringify(checkboxes));
-      });
-
-      applyBorderColor();
-  };
-
-  // Function to apply the border color from the polygon element
-  const applyBorderColor = () => {
-      const svgPath = document.querySelector('.ddbc-initiative-box-svg path');
-      if (svgPath) {
-          const borderColor = svgPath.getAttribute('fill');
-          const popup = document.getElementById('cr-popup');
-          const button = document.getElementById('cr-toggle-button');
-          if (popup) {
-              popup.style.borderColor = borderColor
-              button.style.borderColor = borderColor;
-          }
-      }
-  };
-
-  const togglePopupVisibility = () => {
-      const popup = document.getElementById('cr-popup');
-      if (popup) {
-          popup.style.display = popup.style.display === 'none' ? 'block' : 'none';
-      }
-      const toggleButton = document.getElementById('cr-toggle-button');
-      if (toggleButton) {
-          toggleButton.textContent = popup.style.display === 'none' ? 'Show' : 'Hide';
-      }
-  };
-
-  // Function to create and append the toggle button
-  const createToggleButton = () => {
-      const button = document.createElement('button');
-      button.textContent = 'Hide';
-      button.id = 'cr-toggle-button';
-      button.style.position = 'fixed';
-      button.style.border = '1px solid #000';
-      button.style.bottom = '70px'; // Adjust the position as needed
-      button.style.right = '10px'; // Adjust the position as needed
-      button.addEventListener('click', togglePopupVisibility);
-      document.body.appendChild(button);
-  };
-
-  // Function to create and show the custom alert box
-  const showAlert = (message) => {
-    // Create the modal overlay
-    const overlay = document.createElement('div');
-    overlay.className = 'cr-overlay';
-    overlay.style.position = 'fixed';
-    overlay.style.top = '0';
-    overlay.style.left = '0';
-    overlay.style.width = '100%';
-    overlay.style.height = '100%';
-    overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
-    overlay.style.zIndex = 2000;
-
-    // Create the modal box
-    const modal = document.createElement('div');
-    modal.className = 'cr-modal';
-    modal.style.position = 'absolute';
-    modal.style.top = '50%';
-    modal.style.left = '50%';
-    modal.style.transform = 'translate(-50%, -50%)';
-    modal.style.padding = '20px';
-    modal.style.backgroundColor = '#fff';
-    modal.style.border = '1px solid #000';
-    modal.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.3)';
-
-    // Create the message
-    const messageElement = document.createElement('div');
-    messageElement.textContent = message;
-
-    // Create the "Okay" button
-    const button = document.createElement('button');
-    button.textContent = 'Okay';
-    button.addEventListener('click', () => {
-      // Remove the modal overlay
-      overlay.remove();
+    const popup = document.createElement('div');
+    popup.id = 'cr-popup';
+    Object.assign(popup.style, {
+      position: 'fixed',
+      bottom: '10px',
+      right: '10px',
+      width: '200px',
+      padding: '10px',
+      backgroundColor: '#fff',
+      border: '2px solid #000',
+      zIndex: 1000,
+      boxShadow: '0 4px 8px rgba(0,0,0,.1)',
+      borderRadius: '6px',
+      fontFamily: 'inherit',
+      fontSize: '14px'
     });
 
-    // Append elements to modal
-    modal.appendChild(messageElement);
-    modal.appendChild(button);
+    popup.innerHTML = `
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
+        <input type="checkbox" id="reactionCheckbox" ${savedReaction ? 'checked' : ''}>
+        <label for="reactionCheckbox">Reaction</label>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input type="checkbox" id="concentrationCheckbox" ${savedConcentration ? 'checked' : ''}>
+        <label for="concentrationCheckbox">Concentration</label>
+      </div>
+    `;
+    document.body.appendChild(popup);
 
-    // Append modal to overlay
+    const reactionCheckbox = qs('#reactionCheckbox');
+    const concentrationCheckbox = qs('#concentrationCheckbox');
+
+    reactionCheckbox.addEventListener('change', () => {
+      localStorage.setItem(storageKey, JSON.stringify({ ...saved, reaction: reactionCheckbox.checked }));
+    });
+    concentrationCheckbox.addEventListener('change', () => {
+      localStorage.setItem(storageKey, JSON.stringify({ ...saved, concentration: concentrationCheckbox.checked }));
+    });
+  };
+
+  const createToggleButton = () => {
+    const button = document.createElement('button');
+    button.textContent = 'Hide';
+    button.id = 'cr-toggle-button';
+    Object.assign(button.style, {
+      position: 'fixed',
+      border: '1px solid #000',
+      bottom: '70px',
+      right: '10px',
+      zIndex: 1000,
+      padding: '6px 10px',
+      borderRadius: '6px',
+      background: '#fff',
+      cursor: 'pointer',
+      fontFamily: 'inherit',
+      fontSize: '13px'
+    });
+    button.addEventListener('click', () => {
+      const popup = qs('#cr-popup');
+      if (!popup) return;
+      const nowHidden = popup.style.display !== 'none' ? 'none' : 'block';
+      popup.style.display = nowHidden;
+      button.textContent = nowHidden === 'none' ? 'Show' : 'Hide';
+    });
+    document.body.appendChild(button);
+  };
+
+  // ---- style sync to DDB border ----
+  const applyBorderColor = () => {
+    const svgPath = qs('.ddbc-initiative-box-svg path');
+    if (!svgPath) return;
+    const borderColor = svgPath.getAttribute('fill') || '#000';
+    const popup = qs('#cr-popup');
+    const button = qs('#cr-toggle-button');
+    if (popup)popup.style.borderColor = borderColor;
+    if (button) button.style.borderColor = borderColor;
+  };
+
+  const observeSVGChanges = () => {
+    const svgEl = qs('.ddbc-initiative-box-svg');
+    if (!svgEl) return;
+    const mo = new MutationObserver(applyBorderColor);
+    mo.observe(svgEl, { attributes: true, childList: true, subtree: true });
+  };
+
+  // ---- custom alert ----
+  const showAlert = (message) => {
+    if (qs('.cr-overlay')) return; // prevent stacking
+
+    const overlay = document.createElement('div');
+    overlay.className = 'cr-overlay';
+    Object.assign(overlay.style, {
+      position: 'fixed', inset: '0',
+      backgroundColor: 'rgba(0,0,0,.5)',
+      zIndex: 2000
+    });
+
+    const modal = document.createElement('div');
+    modal.className = 'cr-modal';
+    Object.assign(modal.style, {
+      position: 'absolute',
+      top: '50%', left: '50%', transform: 'translate(-50%,-50%)',
+      padding: '16px 18px',
+      backgroundColor: '#fff',
+      border: '1px solid #000',
+      boxShadow: '0 4px 8px rgba(0,0,0,.3)',
+      borderRadius: '8px',
+      maxWidth: '80%', textAlign: 'center', lineHeight: '1.4'
+    });
+
+    const msg = document.createElement('div');
+    msg.textContent = message;
+    msg.style.marginBottom = '12px';
+
+    const btn = document.createElement('button');
+    btn.textContent = 'Okay';
+    Object.assign(btn.style, {
+      border: '1px solid #000',
+      background: '#fff',
+      padding: '6px 12px',
+      borderRadius: '6px',
+      cursor: 'pointer'
+    });
+    btn.addEventListener('click', () => overlay.remove());
+
+    modal.appendChild(msg);
+    modal.appendChild(btn);
     overlay.appendChild(modal);
-
-    // Append overlay to body
     document.body.appendChild(overlay);
-
     console.log(message);
   };
 
-  // Function to add event listener to the damage button
-  const addDamageListener = () => {
-      const damageButton = document.querySelector('.ct-health-summary__adjuster-button--damage');
-      const damageInput = document.querySelector('.ct-health-summary__adjuster-field-input');
+  // ---- damage / apply handler (robust, class-name-light) ----
+  const hookAdjusterApply = () => {
+    // Look for an open adjuster-like container
+    const candidates = qsa('[class*="adjuster"], [data-testid*="adjuster"], [aria-label*="Adjust"]');
+    let container = candidates.find(el =>
+      /health|adjuster|damage/i.test(el.className + ' ' + (el.getAttribute('aria-label') || ''))
+    ) || document.body;
 
-      if (damageButton && damageInput) {
-        damageButton.addEventListener('click', () => {
-          // Check if an alert is already being displayed
-          if (document.querySelector('.cr-overlay')) {
-            return;
-          }
+    // Inside it, find a numeric input (damage value)
+    const input =
+      qs('.ct-health-summary__adjuster-field-input', container) ||
+      qs('input[type="number"]', container) ||
+      qs('input[pattern*="\\d"]', container);
 
-          const concentrationCheckbox = document.getElementById('concentrationCheckbox');
-          if (concentrationCheckbox && concentrationCheckbox.checked) {
-            const damage = parseInt(damageInput.value, 10);
-            if (!isNaN(damage) && damage > 0) {
-              const dc = Math.max(10, Math.floor(damage / 2));
-              showAlert(`Make a Concentration check! The DC is ${dc}.`);
-            } else {
-              showAlert('Invalid damage value.');
-            }
-          }
-        });
-      }
-  };
+    // Find an Apply-like button
+    const applyBtn = qsa('button', container)
+      .find(b => /apply|confirm|damage/i.test((b.textContent || '').trim()) && !b.dataset.crBound);
 
-  // Function to observe changes in the SVG element and update the border color
-  const observeSVGChanges = () => {
-      const svgElement = document.querySelector('.ddbc-initiative-box-svg');
-      if (svgElement) {
-          const observer = new MutationObserver(applyBorderColor);
-          observer.observe(svgElement, { attributes: true, childList: true, subtree: true });
-      }
-  };
+    if (applyBtn && input) {
+      applyBtn.dataset.crBound = '1';
+      applyBtn.addEventListener('click', () => {
+        const conc = qs('#concentrationCheckbox');
+        if (!conc || !conc.checked) return;
 
-  // Function to observe changes in the DOM and add event listeners when elements are available
-  const observeDOM = () => {
-      const observer = new MutationObserver((mutations) => {
-          mutations.forEach((mutation) => {
-              if (mutation.type === 'childList') {
-                  applyBorderColor(); // Update border color on DOM changes
-                  observeSVGChanges(); // Observe changes in the SVG element
-
-                  // Check for the damage button and input and add the event listener
-                  addDamageListener();
-              }
-          });
-      });
-
-      observer.observe(document.body, {
-          childList: true,
-          subtree: true,
-      });
-  };
-
-  // Check if we are on a character sheet page and create the popup
-  const init = () => {
-    if (location.pathname.includes('/characters/')) {
-      createPopup();
-      createToggleButton();
-      observeDOM();
-      observeSVGChanges();
-      addDamageListener(); // Attempt to add the listener on init
+        const n = Number(input.value);
+        if (!Number.isFinite(n) || n <= 0) {
+          showAlert('Invalid damage value.');
+          return;
+        }
+        const dc = Math.max(10, Math.floor(n / 2));
+        showAlert(`Make a Concentration check! The DC is ${dc}.`);
+      }, { capture: true });
     }
   };
 
-  // Run the init function after the page loads
+  // Fallback: if the legacy selectors exist, also hook those directly
+  const addLegacyDamageListener = () => {
+    const damageButton = qs('.ct-health-summary__adjuster-button--damage');
+    if (!damageButton) return;
+    damageButton.addEventListener('click', () => {
+      // Wait a tick for the adjuster UI to render, then hook Apply
+      setTimeout(hookAdjusterApply, 0);
+    });
+  };
+
+  // Observe DOM to (re)attach handlers as DDB renders/updates
+  const observeDOM = () => {
+    const mo = new MutationObserver(() => {
+      applyBorderColor();
+      hookAdjusterApply();
+      addLegacyDamageListener();
+    });
+    mo.observe(document.body, { childList: true, subtree: true });
+  };
+
+  // ---- init ----
+  const init = () => {
+    if (!location.pathname.includes('/characters/')) return;
+    createPopup();
+    createToggleButton();
+    applyBorderColor();// moved here so the button exists
+    observeSVGChanges();
+    observeDOM();
+    // initial attempts
+    hookAdjusterApply();
+    addLegacyDamageListener();
+  };
+
   window.addEventListener('load', init);
 })();
