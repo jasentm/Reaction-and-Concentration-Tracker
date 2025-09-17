@@ -35,7 +35,7 @@
       position: 'fixed',
       bottom: '10px',
       right: '10px',
-      width: '200px',
+      width: '130px',
       padding: '10px',
       backgroundColor: '#fff',
       border: '2px solid #000',
@@ -76,7 +76,7 @@
     Object.assign(button.style, {
       position: 'fixed',
       border: '1px solid #000',
-      bottom: '70px',
+      bottom: '78px',
       right: '10px',
       zIndex: 1000,
       padding: '6px 10px',
@@ -103,7 +103,7 @@
     const borderColor = svgPath.getAttribute('fill') || '#000';
     const popup = qs('#cr-popup');
     const button = qs('#cr-toggle-button');
-    if (popup)popup.style.borderColor = borderColor;
+    if (popup) popup.style.borderColor = borderColor;
     if (button) button.style.borderColor = borderColor;
   };
 
@@ -221,7 +221,7 @@
     if (!location.pathname.includes('/characters/')) return;
     createPopup();
     createToggleButton();
-    applyBorderColor();// moved here so the button exists
+    applyBorderColor(); // moved here so the button exists
     observeSVGChanges();
     observeDOM();
     // initial attempts
